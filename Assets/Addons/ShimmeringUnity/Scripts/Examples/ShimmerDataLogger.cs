@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using ShimmerAPI;
 using UnityEngine;
+using System.IO;
+using System;
 
 namespace ShimmeringUnity
 {
@@ -9,6 +11,9 @@ namespace ShimmeringUnity
     /// </summary>
     public class ShimmerDataLogger : MonoBehaviour
     {
+
+        private string logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "shimmer_log.txt");
+        private int checkpoint_num = 0;
 
         [SerializeField]
         [Tooltip("Reference to the shimmer device.")]
@@ -91,8 +96,36 @@ namespace ShimmeringUnity
                 signal.Value = $"{data.Data} {data.Unit}";
 
                 //This is where you can do something with the data...
+
+                LogDataToFile(signal.Name.ToString(), $"{data.Data} {data.Unit}");
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Debug.Log("Checkpoint " + checkpoint_num.ToString());
+                LogDataToFile("Checkpoint: ", checkpoint_num.ToString());
+                checkpoint_num += 1;
             }
         }
 
+        /// <summary>
+        /// Logs data to a file.
+        /// </summary>
+        /// <param name="signalName">Name of the signal</param>
+        /// <param name="value">Value of the signal</param>
+        private void LogDataToFile(string signalName, string value)
+        {
+            try
+            {
+                using (StreamWriter sw = File.AppendText(logFilePath))
+                {
+                    sw.WriteLine($"{signalName}: {value}");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Error writing to log file: {ex.Message}");
+            }
+        }
     }
 }

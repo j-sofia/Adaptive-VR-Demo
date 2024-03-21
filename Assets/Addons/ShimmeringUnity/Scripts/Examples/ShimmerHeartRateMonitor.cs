@@ -34,6 +34,8 @@ namespace ShimmeringUnity
         double LPF_CORNER_FREQ_HZ = 5;
         double HPF_CORNER_FREQ_HZ = 0.5;
 
+        public int HeartRate { get { return heartRate; } }
+
         void AddALine()
         {
 
@@ -48,16 +50,21 @@ namespace ShimmeringUnity
 
         void Start()
         {
+            heartRate = -1;
             GameObject dd = GameObject.Find("DataDiagram");
             if (null == dd)
             {
                 Debug.LogWarning("can not find a gameobject of DataDiagram");
                 return;
+            } else
+            {
+                dd.transform.localScale = new Vector3(0,0,0);
             }
             m_DataDiagram = dd.GetComponent<DD_DataDiagram>();
 
             m_DataDiagram.PreDestroyLineEvent += (s, e) => { lineList.Remove(e.line); };
 
+            AddALine();
             AddALine();
             AddALine();
             AddALine();
@@ -87,6 +94,11 @@ namespace ShimmeringUnity
                 ShimmerConfig.NAME_DICT[ShimmerConfig.SignalName.INTERNAL_ADC_A13],
                 ShimmerConfig.FORMAT_DICT[ShimmerConfig.SignalFormat.CAL]
             );
+            //Get GSR data
+            SensorData dataGSR = objectCluster.GetData(
+               ShimmerConfig.NAME_DICT[ShimmerConfig.SignalName.GSR_CONDUCTANCE],
+               ShimmerConfig.FORMAT_DICT[ShimmerConfig.SignalFormat.CAL]
+            );
             //Get system  timestamp data
             SensorData dataTS = objectCluster.GetData(
                 ShimmerConfig.NAME_DICT[ShimmerConfig.SignalName.SYSTEM_TIMESTAMP],
@@ -102,13 +114,17 @@ namespace ShimmeringUnity
             double dataFilteredHP = HPF_PPG.filterData(dataFilteredLP);
             heartRate = (int)Math.Round(PPGtoHeartRateCalculation.ppgToHrConversion(dataFilteredHP, dataTS.Data));
 
+            
             m_DataDiagram.InputPoint(lineList[0], new Vector2(0.1f, heartRate));
 
             m_DataDiagram.InputPoint(lineList[1], new Vector2(0.1f, (float)dataPPG.Data/1600*100));
 
             m_DataDiagram.InputPoint(lineList[2], new Vector2(0.1f, (float)dataFilteredHP));
 
-            StartCoroutine(GameController.GetComponent<GameController>().DisplayCenterPrintText("Heartrate: " + heartRate.ToString(), 1f));
+            m_DataDiagram.InputPoint(lineList[3], new Vector2(0.1f, (((float)dataGSR.Data * 10) - 58) * 10));
+            
+            StartCoroutine(GameController.GetComponent<GameController>().DisplayHeartrateText(heartRate.ToString() + "bpm", 1f));
+            
         }
     }
 

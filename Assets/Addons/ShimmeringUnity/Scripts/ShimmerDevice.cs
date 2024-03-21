@@ -178,7 +178,7 @@ namespace ShimmeringUnity
         private Queue<ObjectCluster> shimmerDataQueue = new Queue<ObjectCluster>();
         private Thread shimmerThread = null;
         private ShimmerBluetooth shimmer;
-        private int connectionCount;
+
         //The connect blocker prevents multiple threads from spawning
         private bool connectBlocker = false;
         private int waitBufferMilliseconds = 250;
@@ -324,24 +324,19 @@ namespace ShimmeringUnity
                     int state = (int)eventArgs.getObject();
                     if (state == (int)ShimmerBluetooth.SHIMMER_STATE_CONNECTED)
                     {
-                        Debug.Log("THREAD: Connected " + connectionCount);
                         CurrentState = State.Connected;
                     }
                     else if (state == (int)ShimmerBluetooth.SHIMMER_STATE_CONNECTING)
                     {
-                        Debug.Log("THREAD: Connecting " + connectionCount);
                         CurrentState = State.Connecting;
                     }
                     else if (state == (int)ShimmerBluetooth.SHIMMER_STATE_NONE)
                     {
-                        Debug.Log("THREAD: Disconnected " + connectionCount);
-                        //Remove event handler
                         shimmer.UICallback -= HandleEvent;
                         CurrentState = State.Disconnected;
                     }
                     else if (state == (int)ShimmerBluetooth.SHIMMER_STATE_STREAMING)
                     {
-                        Debug.Log("THREAD: Streaming " + connectionCount);
                         CurrentState = State.Streaming;
                     }
                     break;
